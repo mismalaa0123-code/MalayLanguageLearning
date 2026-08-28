@@ -1,0 +1,55 @@
+package com.example.malaylanguage.ui.profile
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.example.malaylanguage.data.repository.AppRepository
+import com.example.malaylanguage.databinding.FragmentProfileBinding
+import kotlinx.coroutines.launch
+
+class ProfileFragment : Fragment() {
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var repository: AppRepository
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        repository = AppRepository(requireContext())
+
+        lifecycleScope.launch {
+            val progressCount = repository.getProgressCount()
+            val totalItems = repository.allItems.size
+            binding.tvTotalVocab.text = "মোট Vocabulary: $totalItems"
+            binding.tvLearned.text = "মোট শেখা: $progressCount"
+            val favCount = repository.allItems.count { it.isFavorite }
+            binding.tvFavoriteCount.text = "Favorite: $favCount"
+            if (totalItems > 0) {
+                val percent = (progressCount * 100) / totalItems
+                binding.tvProgress.text = "Progress: $percent%"
+                binding.progressBar.progress = percent
+            }
+        }
+
+        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
